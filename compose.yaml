@@ -17,7 +17,7 @@ services:
     build:
       context: .
       target: runtime
-    command: ["node", "dist/migrate.js"]
+    command: ["node", "dist/infrastructure/database/migrate.js"]
     environment:
       DATABASE_URL: postgres://ticketing:ticketing_local@db:5432/ticketing
     depends_on:
@@ -67,7 +67,7 @@ services:
     profiles: ["test"]
     environment:
       DATABASE_URL: postgres://ticketing:ticketing_local@db-test:5432/ticketing_test
-    command: ["sh", "-c", "node dist/migrate.js && npm test"]
+    command: ["sh", "-c", "node dist/infrastructure/database/migrate.js && npm test"]
     depends_on:
       db-test:
         condition: service_healthy

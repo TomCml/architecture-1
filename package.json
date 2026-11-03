@@ -6,10 +6,10 @@
   "description": "Monolithe pédagogique de billetterie pour le cours d'architecture 2027",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/server.js",
-    "dev": "tsx watch src/server.ts",
-    "migrate": "tsx src/migrate.ts",
-    "test": "tsx --test --test-concurrency=1 tests/api.test.ts tests/auth.test.ts",
+    "start": "node dist/api/server.js",
+    "dev": "tsx watch src/api/server.ts",
+    "migrate": "tsx src/infrastructure/database/migrate.ts",
+    "test": "tsx --test --test-concurrency=1 \"tests/**/*.test.ts\"",
     "test:challenge": "tsx --test tests/concurrency.challenge.ts",
     "load": "node scripts/load.mjs"
   },

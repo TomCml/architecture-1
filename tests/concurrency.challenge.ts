@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import { Pool } from 'pg';
-import { buildApp } from '../src/app.js';
+import { buildApp } from '../src/api/app.js';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const app = buildApp(pool, { reservationTtlMinutes: 15, paymentSlowMs: 1, reservationHoldMs: 120, jwtSecret: 'test-secret-test-secret-test-secret-0123', tokenTtlMinutes: 60, cookieSecure: false });

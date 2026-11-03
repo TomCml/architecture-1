@@ -33,7 +33,7 @@ Le scénario `slow` attend 2 secondes par défaut. Il ne contacte aucun prestata
 | Action | Commande |
 | --- | --- |
 | Lancer les tests ordinaires dans un conteneur | `docker compose --profile test run --build --rm test` |
-| Observer le défaut de concurrence initial | `docker compose --profile test run --rm test sh -c 'node dist/migrate.js && npm run test:challenge'` |
+| Observer le défaut de concurrence initial | `docker compose --profile test run --rm test sh -c 'node dist/infrastructure/database/migrate.js && npm run test:challenge'` |
 | Mesurer la consultation pendant 10 secondes | `docker compose --profile load run --build --rm load` |
 | Arrêter les conteneurs en gardant les données | `docker compose down` |
 | Réinitialiser la démonstration locale | `docker compose --profile test down -v` puis `docker compose up --build -d` |
@@ -67,17 +67,26 @@ Commencer par découvrir les objets et parcours métier **avant** d'utiliser les
 
 La [méthode de découpage](docs/ateliers/decoupage-fonctionnel.md) guide l'enquête sans nommer les services attendus. Le [modèle d'ADR](docs/adr-template.md) et les [règles d'usage de l'IA](docs/usage-ia.md) accompagnent la justification des décisions.
 
-## Structure initiale
+## Structure
 
 ```text
-public/             interface de démonstration
-src/app.ts          routes HTTP
-src/services/       décisions et orchestration métier
-src/repositories/   accès PostgreSQL
-src/integrations/   paiement fictif, hachage des mots de passe, jetons JWT
-db/                 schéma et données de démonstration
-tests/              parcours ordinaires et défi séparé
-scripts/            mesure de charge simple
+public/                       interface de démonstration
+src/api/                      app.ts (composition root), server.ts, config.ts, controllers/, routes/, middlewares/, validation/
+src/application/usecases/     un use case par commande ou requête (event-, reservation-, user-usecases/)
+src/domain/                   entities/ (Event, Reservation, PaymentAttempt, User), interfaces/ (ports), types.ts
+src/infrastructure/           database/ (pool, migrate, migrations/, seeds/), repositories/ (PostgreSQL), services/ (paiement fictif, scrypt, JWT)
+src/utility/                  httpError.ts, authCookie.ts, id.ts
+tests/                        usecases/ (tests unitaires avec fakes), *.integration.test.ts, helpers/, défi de concurrence
+scripts/                      mesure de charge simple
 ```
 
-Le code de départ concentre volontairement plusieurs responsabilités dans `TicketingService`. Certaines garanties restent à construire. Lire [les limites connues](docs/architecture-initiale.md) avant de modifier le système.
+Règle de dépendance : `domain` n'importe rien d'extérieur ; `application` n'importe que `domain` et `utility` (jamais `pg`, `fastify`, `jose` ni `infrastructure`) ; `infrastructure` implémente les interfaces de `domain/interfaces` ; `api` assemble le tout.
+
+Écarts assumés par rapport à la structure de référence (Tooly) :
+
+1. Le code reste sous `src/`, car le dépôt contient aussi `public/`, `scripts/` et les fichiers Docker.
+2. Racine de composition : `buildApp(pool, config)` instancie dépôts, services et use cases, puis les injecte dans des contrôleurs-classes, au lieu de singletons au niveau du module.
+3. Hachage des mots de passe, jetons et paiement passent par des interfaces du domaine, ce qui permet de tester les use cases avec des fakes.
+4. `httpError(statusCode, code, message)` porte un code applicatif, formaté en `{ "error": { "code", "message" } }` par le middleware d'erreur.
+
+Le comportement reste celui du socle : pas de transaction autour de la réservation, donc le défi de concurrence échoue toujours. Lire [les limites connues](docs/architecture-initiale.md) avant de modifier le système.
