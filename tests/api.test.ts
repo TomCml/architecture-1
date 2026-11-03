@@ -4,7 +4,7 @@ import { Pool } from 'pg';
 import { buildApp } from '../src/app.js';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const app = buildApp(pool, { reservationTtlMinutes: 15, paymentSlowMs: 1, reservationHoldMs: 0 });
+const app = buildApp(pool, { reservationTtlMinutes: 15, paymentSlowMs: 1, reservationHoldMs: 0});
 
 before(async () => { await app.ready(); });
 beforeEach(async () => { await pool.query('TRUNCATE payment_attempts, reservations'); });
@@ -75,6 +75,39 @@ test('les erreurs distinguent entrée invalide, événement absent et vente comp
   const full = await app.inject({ method: 'POST', url: '/api/reservations', payload: { eventId: 'atelier-une-place', customerRef: 'client-b' } });
   assert.equal(full.statusCode, 409);
   assert.equal(full.json().error.code, 'SOLD_OUT');
+});
+
+async function installEvent(id: string, status: 'OPEN' | 'CANCELLED') {
+  await pool.query(
+    `INSERT INTO events (id, title, venue, starts_at, capacity, status)
+     VALUES ($1, 'Événement de test', 'Salle de test', '2027-09-01 20:00:00+02', 10, $2)
+     ON CONFLICT (id) DO UPDATE SET status = EXCLUDED.status`,
+    [id, status],
+  );
+}
+
+async function countReservations(eventId: string): Promise<number> {
+  const result = await pool.query<{ count: number }>('SELECT count(*)::int AS count FROM reservations WHERE event_id = $1', [eventId]);
+  return result.rows[0].count;
+}
+
+test('un événement annulé refuse toute nouvelle réservation', async () => {
+  await installEvent('test-annule', 'CANCELLED');
+  const refused = await app.inject({ method: 'POST', url: '/api/reservations', payload: { eventId: 'test-annule', customerRef: 'client-test' } });
+  assert.equal(refused.statusCode, 409);
+  assert.equal(refused.json().error.code, 'EVENT_CANCELLED');
+  assert.equal(await countReservations('test-annule'), 0);
+});
+
+test('l’annulation survenue après la consultation est prise en compte à la réservation', async () => {
+  await installEvent('test-annule-apres-consultation', 'OPEN');
+  const consulted = await app.inject({ method: 'GET', url: '/api/events/test-annule-apres-consultation' });
+  assert.equal(consulted.json().event.status, 'OPEN');
+  await installEvent('test-annule-apres-consultation', 'CANCELLED');
+  const refused = await app.inject({ method: 'POST', url: '/api/reservations', payload: { eventId: 'test-annule-apres-consultation', customerRef: 'client-test' } });
+  assert.equal(refused.statusCode, 409);
+  assert.equal(refused.json().error.code, 'EVENT_CANCELLED');
+  assert.equal(await countReservations('test-annule-apres-consultation'), 0);
 });
 
 test('un identifiant de réservation mal formé reçoit une erreur utilisateur', async () => {
