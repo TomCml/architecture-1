@@ -58,6 +58,12 @@ input, select { width: 100%; min-height: 44px; padding: 9px 12px; border: 1px so
 .lookup-row button { padding: 0 13px; }
 .feedback { min-height: 24px; margin: 18px 0 0; color: var(--danger); font-size: 14px; }
 .feedback:empty { margin: 0; }
+.account { margin-bottom: 30px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+.account-form input { margin-bottom: 12px; }
+.account-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.account-actions button { min-height: 44px; padding: 0 13px; border: 1px solid var(--blue); background: var(--white); color: var(--blue); font-weight: 700; }
+.account-actions .primary-button { background: var(--blue); color: white; }
+.account-actions button[hidden] { display: none; }
 .loading { padding-top: 16px; color: var(--muted); }
 footer { padding: 28px 0 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
 @media (max-width: 760px) { .page-shell { padding: 0 18px; } .topbar { min-height: 70px; } .brand { font-size: 24px; } .demo-label { font-size: 12px; } .intro { grid-template-columns: 1fr; gap: 28px; padding: 42px 0; } .ticket-stub { display: none; } .content-grid { grid-template-columns: 1fr; } .event-section, .status-panel { padding: 22px; } }

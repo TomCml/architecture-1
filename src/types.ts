@@ -29,3 +29,9 @@ export interface PaymentAttemptView {
   status: PaymentStatus;
   createdAt: string;
 }
+
+export interface UserView {
+  id: string;
+  email: string;
+  createdAt: string;
+}

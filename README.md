@@ -51,7 +51,13 @@ Pour modifier la durée ou la pression de charge, définir les variables `LOAD_S
 | `POST /api/reservations` | Réserver une place avec `{ "eventId": "festival-lumieres", "customerRef": "demo-1" }` |
 | `GET /api/reservations/:id` | État et tentatives de paiement |
 | `POST /api/reservations/:id/checkout` | Paiement fictif avec `{ "scenario": "success" }`, `failure` ou `slow` |
+| `POST /api/auth/register` | Créer un compte avec `{ "email": "…", "password": "…" }` (8 à 128 caractères) ; connecte directement via le cookie `access_token` |
+| `POST /api/auth/login` | Se connecter avec `{ "email": "…", "password": "…" }` ; pose le cookie `access_token` |
+| `POST /api/auth/logout` | Se déconnecter (`204`, cookie effacé) |
+| `GET /api/auth/me` | Utilisateur courant (`401` si non connecté) |
 | `GET /health` | Santé de l'application et accès à la base |
+
+L'authentification utilise un JWT (HS256) transporté uniquement dans un cookie `HttpOnly`, `SameSite=Strict`. Variables d'environnement : `JWT_SECRET` (obligatoire, au moins 32 caractères ; une valeur de développement est fournie par `compose.yaml`), `AUTH_TOKEN_TTL_MINUTES` (défaut `60`) et `COOKIE_SECURE` (`true` pour ajouter l'attribut `Secure`, défaut `false`). Les routes d'authentification peuvent renvoyer `400` (`INVALID_INPUT`), `401` (`INVALID_CREDENTIALS`, `UNAUTHENTICATED`) ou `409` (`EMAIL_TAKEN`). Les routes événements et réservations restent publiques.
 
 Les erreurs JSON ont la forme `{ "error": { "code": "…", "message": "…" } }`. La réservation peut renvoyer `400` (entrée invalide), `404` (événement absent) ou `409` (plus de place). Le checkout peut également renvoyer `410` (réservation expirée). Une erreur technique retourne `503`.
 
@@ -68,7 +74,7 @@ public/             interface de démonstration
 src/app.ts          routes HTTP
 src/services/       décisions et orchestration métier
 src/repositories/   accès PostgreSQL
-src/integrations/   paiement fictif
+src/integrations/   paiement fictif, hachage des mots de passe, jetons JWT
 db/                 schéma et données de démonstration
 tests/              parcours ordinaires et défi séparé
 scripts/            mesure de charge simple

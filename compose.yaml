@@ -35,6 +35,7 @@ services:
       RESERVATION_TTL_MINUTES: ${RESERVATION_TTL_MINUTES:-15}
       PAYMENT_SLOW_MS: ${PAYMENT_SLOW_MS:-2000}
       LAB_RESERVATION_PAUSE_MS: ${LAB_RESERVATION_PAUSE_MS:-75}
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:

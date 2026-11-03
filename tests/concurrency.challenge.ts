@@ -4,7 +4,7 @@ import { Pool } from 'pg';
 import { buildApp } from '../src/app.js';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const app = buildApp(pool, { reservationTtlMinutes: 15, paymentSlowMs: 1, reservationHoldMs: 120 });
+const app = buildApp(pool, { reservationTtlMinutes: 15, paymentSlowMs: 1, reservationHoldMs: 120, jwtSecret: 'test-secret-test-secret-test-secret-0123', tokenTtlMinutes: 60, cookieSecure: false });
 before(async () => {
   await app.ready();
   await pool.query('TRUNCATE payment_attempts, reservations');

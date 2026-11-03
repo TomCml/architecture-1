@@ -7,10 +7,11 @@ let currentReservationId = null;
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
+    credentials: 'same-origin',
     ...options,
     headers: { 'content-type': 'application/json', ...(options.headers || {}) },
   });
-  const body = await response.json();
+  const body = response.status === 204 ? {} : await response.json();
   if (!response.ok) throw new Error(body.error?.message || 'La demande n’a pas abouti.');
   return body;
 }
@@ -118,5 +119,49 @@ document.querySelector('#lookup-form').addEventListener('submit', async event =>
   } catch (error) { showFeedback(error.message); }
 });
 
+const accountState = document.querySelector('#account-state');
+const accountFeedback = document.querySelector('#account-feedback');
+const accountForm = document.querySelector('#account-form');
+const loginButton = document.querySelector('#login');
+const registerButton = document.querySelector('#register');
+const logoutButton = document.querySelector('#logout');
+
+function displayAccount(user) {
+  accountState.textContent = user ? `Connecté : ${user.email}` : 'Non connecté.';
+  accountForm.querySelectorAll('input').forEach(input => { input.hidden = !!user; input.previousElementSibling.hidden = !!user; });
+  loginButton.hidden = !!user;
+  registerButton.hidden = !!user;
+  logoutButton.hidden = !user;
+}
+
+async function authenticate(path) {
+  accountFeedback.textContent = '';
+  const email = document.querySelector('#account-email').value;
+  const password = document.querySelector('#account-password').value;
+  try {
+    const { user } = await api(path, { method: 'POST', body: JSON.stringify({ email, password }) });
+    document.querySelector('#account-password').value = '';
+    displayAccount(user);
+  } catch (error) { accountFeedback.textContent = error.message; }
+}
+
+accountForm.addEventListener('submit', event => { event.preventDefault(); authenticate('/api/auth/login'); });
+registerButton.addEventListener('click', () => authenticate('/api/auth/register'));
+logoutButton.addEventListener('click', async () => {
+  accountFeedback.textContent = '';
+  try {
+    await api('/api/auth/logout', { method: 'POST' });
+    displayAccount(null);
+  } catch (error) { accountFeedback.textContent = error.message; }
+});
+
+async function loadAccount() {
+  try {
+    const { user } = await api('/api/auth/me');
+    displayAccount(user);
+  } catch { displayAccount(null); }
+}
+
 document.querySelector('#refresh-events').addEventListener('click', loadEvents);
 loadEvents();
+loadAccount();

@@ -40,6 +40,22 @@
         </section>
 
         <aside class="status-panel" aria-labelledby="status-title">
+          <section class="account" aria-labelledby="account-title">
+            <h2 id="account-title">Compte</h2>
+            <p id="account-state" class="panel-copy" aria-live="polite">Non connecté.</p>
+            <form id="account-form" class="account-form">
+              <label class="field-label" for="account-email">Email</label>
+              <input id="account-email" type="email" maxlength="254" autocomplete="username">
+              <label class="field-label" for="account-password">Mot de passe</label>
+              <input id="account-password" type="password" minlength="8" maxlength="128" autocomplete="current-password">
+              <div class="account-actions">
+                <button id="login" class="primary-button" type="submit">Se connecter</button>
+                <button id="register" type="button">Créer un compte</button>
+                <button id="logout" type="button" hidden>Se déconnecter</button>
+              </div>
+            </form>
+            <p id="account-feedback" class="feedback" role="status" aria-live="polite"></p>
+          </section>
           <h2 id="status-title">Ma réservation</h2>
           <p class="panel-copy">L’état affiché ici est celui enregistré par le système.</p>
           <div id="reservation-state" class="reservation-state" aria-live="polite">Choisissez un événement pour commencer.</div>
